@@ -359,16 +359,37 @@ export default class HorizontalTilerExtension extends Extension {
     }
 
     _tileAllWindows() {
-        let windows = this._getWindowsOnCurrentMonitor();
+        let windows = this._getWindowsOnCurrentMonitor(true);
         if (windows.length === 0) return;
 
         let workArea = this._getMonitorWorkArea();
         let count = windows.length;
-        let windowWidth = Math.floor(workArea.width / count);
         let windowHeight = workArea.height;
 
+        let focusedWindow = global.display.get_focus_window();
+        let focusedIndex = windows.indexOf(focusedWindow);
+
+        // If the focused window is a transient dialog, find its parent
+        if (focusedWindow && focusedWindow.get_transient_for() !== null) {
+            focusedIndex = windows.indexOf(focusedWindow.get_transient_for());
+        }
+
+        // If focused window is not in our list, fall back to index 0
+        if (focusedIndex === -1)
+            focusedIndex = 0;
+
+        // Arrange windows so the focused window is in the center slot
+        // For 3 windows: [left = (focusedIndex - 1), center = focusedIndex, right = (focusedIndex + 1)]
+        // For 2 windows: [left = (focusedIndex - 1), center = focusedIndex]
+        // For 1 window: [center = focusedIndex]
+        let windowWidth = Math.floor(workArea.width / count);
+
         for (let i = 0; i < count; i++) {
-            let win = windows[i];
+            // Calculate which window goes in this slot
+            // Slot 0 = left, slot 1 = center, slot 2 = right, etc.
+            let offset = i - Math.floor(count / 2);
+            let winIndex = (focusedIndex + offset + count) % count;
+            let win = windows[winIndex];
             let x = workArea.x + (i * windowWidth);
             let y = workArea.y;
             win.move_resize_frame(true, x, y, windowWidth, windowHeight);
@@ -735,10 +756,9 @@ export default class HorizontalTilerExtension extends Extension {
         let targetIndex = (currentIndex - 1 + windows.length) % windows.length;
         let targetWindow = windows[targetIndex];
 
+        // Unminimize and activate the target window
+        targetWindow.unminimize();
         targetWindow.activate(global.get_current_time());
-
-        // After focus changes, show only the newly focused window
-        this._showOnlyFocusedWindow();
     }
 
     _focusRight() {
@@ -754,10 +774,9 @@ export default class HorizontalTilerExtension extends Extension {
         let targetIndex = (currentIndex + 1) % windows.length;
         let targetWindow = windows[targetIndex];
 
+        // Unminimize and activate the target window
+        targetWindow.unminimize();
         targetWindow.activate(global.get_current_time());
-
-        // After focus changes, show only the newly focused window
-        this._showOnlyFocusedWindow();
     }
 
     _swapLeft() {
