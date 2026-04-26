@@ -10,53 +10,32 @@
       <description>Keyboard shortcut to enable or disable automatic tiling for the current workspace.</description>
     </key>
 
-    <!-- Keybinding to tile all windows horizontally -->
-    <key name="tile-all-horizontal" type="as">
-      <default>['&lt;Super&gt;&lt;Alt&gt;h']</default>
-      <summary>Tile all windows horizontally</summary>
-      <description>Keyboard shortcut to tile all windows on the current monitor horizontally.</description>
-    </key>
-
-    <!-- Keybinding to tile the focused window -->
-    <key name="tile-focused-horizontal" type="as">
-      <default>['&lt;Super&gt;&lt;Shift&gt;h']</default>
-      <summary>Tile focused window horizontally</summary>
-      <description>Keyboard shortcut to tile the focused window to its horizontal position.</description>
-    </key>
-
-    <!-- Keybinding to reset all windows -->
-    <key name="reset-windows" type="as">
-      <default>['&lt;Super&gt;&lt;Alt&gt;r']</default>
-      <summary>Reset all windows</summary>
-      <description>Keyboard shortcut to reset all windows to their default size and position.</description>
-    </key>
-
-    <!-- Keybinding to move focus to the left window -->
-    <key name="focus-left" type="as">
+    <!-- Keybinding to move window to the left -->
+    <key name="move-left" type="as">
       <default>['&lt;Super&gt;comma']</default>
-      <summary>Focus window to the left</summary>
-      <description>Keyboard shortcut to move focus to the window on the left.</description>
+      <summary>Move window to the left</summary>
+      <description>Keyboard shortcut to move the window to the left.</description>
     </key>
 
-    <!-- Keybinding to move focus to the right window -->
-    <key name="focus-right" type="as">
+    <!-- Keybinding to move window to the right -->
+    <key name="move-right" type="as">
       <default>['&lt;Super&gt;period']</default>
-      <summary>Focus window to the right</summary>
-      <description>Keyboard shortcut to move focus to the window on the right.</description>
+      <summary>Move window to the right</summary>
+      <description>Keyboard shortcut to move the window to the right.</description>
     </key>
 
-    <!-- Keybinding to swap focused window with the window to the left -->
+    <!-- Keybinding to swap the displayed window with the window to the left -->
     <key name="swap-left" type="as">
       <default>['&lt;Super&gt;&lt;Shift&gt;comma']</default>
       <summary>Swap window with left neighbor</summary>
-      <description>Keyboard shortcut to swap the focused window with the window to its left.</description>
+      <description>Keyboard shortcut to swap the displayed window with the window to its left.</description>
     </key>
 
-    <!-- Keybinding to swap focused window with the window to the right -->
+    <!-- Keybinding to swap the displayed window with the window to the right -->
     <key name="swap-right" type="as">
       <default>['&lt;Super&gt;&lt;Shift&gt;period']</default>
       <summary>Swap window with right neighbor</summary>
-      <description>Keyboard shortcut to swap the focused window with the window to its right.</description>
+      <description>Keyboard shortcut to swap the displayed window with the window to its right.</description>
     </key>
 
   </schema>

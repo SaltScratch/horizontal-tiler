@@ -5,10 +5,8 @@ A GNOME Shell extension for GNOME 46 that tiles windows horizontally across the 
 ## Features
 
 - **Auto-Tiling**: Toggle automatic horizontal tiling on/off for the current workspace via the panel indicator or keyboard shortcut
-- **Tile All Windows**: Manually tile all windows on the current monitor horizontally
-- **Tile Focused Window**: Position the focused window to its correct slot in the horizontal layout
-- **Focus Navigation**: Move focus between tiled windows with keyboard shortcuts
-- **Reset Windows**: Restore windows to their default centered size
+- **Window Navigation**: Move between tiled windows with keyboard shortcuts or on-screen controls
+- **Window Swapping**: Reorder windows by swapping their positions
 - **Per-Workspace**: Tiling state is independent per workspace
 
 ## Installation
@@ -33,22 +31,26 @@ A GNOME Shell extension for GNOME 46 that tiles windows horizontally across the 
 Click the grid icon in the top panel to open the menu:
 
 - **Tiling Enabled** toggle switch — Enable/disable auto-tiling for the current workspace
-- **Tile All Windows** — Manually tile all windows
-- **Tile Focused Window** — Tile the currently focused window
-- **Reset All Windows** — Restore windows to default size
-- **Focus Window Left** — Move focus to the window on the left
-- **Focus Window Right** — Move focus to the window on the right
+- **Move Viewport Left** — Shift the viewport to show the previous window in the order on the leftmost monitor
+- **Move Viewport Right** — Shift the viewport to show the next window in the order on the leftmost monitor
+
+### On-Screen Controls
+
+When tiling is enabled with multiple windows, navigation buttons appear on the edge monitors:
+
+- **Leftmost monitor**: Shows left arrow (move left), shuffle icon (swap left), and the title of the window to the left
+- **Rightmost monitor**: Shows right arrow (move right), shuffle icon (swap right), and the title of the window to the right
+- **Middle monitors** (if 3+): No controls shown
 
 ### Keyboard Shortcuts
 
 | Shortcut | Action |
 |---|---|
 | `Super+Shift+T` | Toggle tiling on/off |
-| `Super+Alt+H` | Tile all windows horizontally |
-| `Super+Shift+H` | Tile focused window |
-| `Super+Alt+R` | Reset all windows |
-| `Super+,` | Focus window to the left |
-| `Super+.` | Focus window to the right |
+| `Super+,` | Move window to the left |
+| `Super+.` | Move window to the right |
+| `Super+Shift+,` | Swap window with left neighbor |
+| `Super+Shift+.` | Swap window with right neighbor |
 
 All shortcuts can be customized in **GNOME Settings → Keyboard → View and Customize Shortcuts → Extensions → Horizontal Tiler**.
 
@@ -59,7 +61,7 @@ When auto-tiling is enabled, the extension listens for:
 - Workspace switches
 - Display size changes
 
-It then automatically divides all normal windows equally across the available screen width, filling the full height of the work area (excluding panels and docks).
+It then shows one window per monitor, filling the full height of the work area (excluding panels and docks). Windows are arranged in a circular order, and navigation cycles through them.
 
 ## Files
 
