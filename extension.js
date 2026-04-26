@@ -194,7 +194,14 @@ export default class HorizontalTilerExtension extends Extension {
             this._scheduleTileAll();
         });
 
-        this._windowEnteredMonitorId = global.display.connect('window-entered-monitor', () => {
+        this._windowEnteredMonitorId = global.display.connect('window-entered-monitor', (display, win, monitor) => {
+            // If a normal window was moved onto a monitor, tile it
+            if (win && win.get_window_type() === Meta.WindowType.NORMAL &&
+                win.get_transient_for() === null) {
+                // Give the window focus so it gets tiled
+                win.unminimize();
+                win.activate(global.get_current_time());
+            }
             this._scheduleTileAll();
         });
 
@@ -567,17 +574,28 @@ export default class HorizontalTilerExtension extends Extension {
         this._navButtons.left.set_size(marginWidth, windowHeight);
         this._navButtons.left.show();
 
-        // Position focus icon centered vertically in the margin
+        // Position focus icon at the top of the margin
         let iconSize = 48;
         let iconX = Math.floor((marginWidth - iconSize) / 2);
-        let iconY = Math.floor((windowHeight / 2) - iconSize);
-        this._navButtons.left._icon.set_position(iconX, Math.max(0, iconY));
+        let iconY = 8; // 8px from top
+        this._navButtons.left._icon.set_position(iconX, iconY);
         this._navButtons.left._icon.set_size(iconSize, iconSize);
 
-        // Position swap button below the focus icon (absolute screen coordinates)
-        let swapIconY = iconY + iconSize + 16;
+        // Position rotated title label starting at 25% from the bottom of the margin
+        // The label is rotated -90 degrees with pivot at (0,0), so the text
+        // extends downward from the position. Clamp width to 50% of monitor height.
+        let text = titles.left || '';
+        let visualWidth = 18; // approximate visual width after -90 rotation
+        let labelX = workArea.x + Math.floor((marginWidth - visualWidth) / 2); // horizontally centered
+        let labelY = workArea.y + Math.floor(windowHeight * 0.75); // 25% from bottom
+        this._navButtons.left._titleLabel.set_width(Math.floor(windowHeight * 0.5));
+        this._navButtons.left._titleLabel.set_position(labelX, Math.max(workArea.y, labelY));
+        this._navButtons.left._titleLabel.show();
+
+        // Position swap button at the bottom of the margin (absolute screen coordinates)
+        let swapIconY = windowHeight - iconSize - 8;
         let swapAbsX = workArea.x + iconX;
-        let swapAbsY = workArea.y + Math.max(0, swapIconY);
+        let swapAbsY = workArea.y + swapIconY;
         this._navButtons.left._swapButton.set_position(swapAbsX, swapAbsY);
         this._navButtons.left._swapButton.set_size(iconSize, iconSize);
         if (this._navButtons.left._swapButton._icon) {
@@ -586,26 +604,26 @@ export default class HorizontalTilerExtension extends Extension {
         }
         this._navButtons.left._swapButton.show();
 
-        // Position rotated title label as sibling at the bottom of the margin area
-        let text = titles.left || '';
-        let visualWidth = 18; // approximate visual width after -90 rotation
-        let labelX = workArea.x + Math.floor((marginWidth - visualWidth) / 2); // horizontally centered
-        let labelY = workArea.y + windowHeight - 58; // 50px up from bottom for all titles
-        this._navButtons.left._titleLabel.set_position(labelX, Math.max(workArea.y, labelY));
-        this._navButtons.left._titleLabel.show();
-
         // Position right button in the right margin (icon only)
         this._navButtons.right.set_position(workArea.x + marginWidth + windowWidth, workArea.y);
         this._navButtons.right.set_size(marginWidth, windowHeight);
         this._navButtons.right.show();
 
-        // Position focus icon centered vertically in the margin
-        this._navButtons.right._icon.set_position(iconX, Math.max(0, iconY));
+        // Position focus icon at the top of the margin
+        this._navButtons.right._icon.set_position(iconX, iconY);
         this._navButtons.right._icon.set_size(iconSize, iconSize);
 
-        // Position swap button below the focus icon (absolute screen coordinates)
+        // Position rotated title label starting at 25% from the bottom of the margin
+        text = titles.right || '';
+        labelX = workArea.x + marginWidth + windowWidth + Math.floor((marginWidth - visualWidth) / 2);
+        labelY = workArea.y + Math.floor(windowHeight * 0.75); // 25% from bottom
+        this._navButtons.right._titleLabel.set_width(Math.floor(windowHeight * 0.5));
+        this._navButtons.right._titleLabel.set_position(labelX, Math.max(workArea.y, labelY));
+        this._navButtons.right._titleLabel.show();
+
+        // Position swap button at the bottom of the margin (absolute screen coordinates)
         let rightSwapAbsX = workArea.x + marginWidth + windowWidth + iconX;
-        let rightSwapAbsY = workArea.y + Math.max(0, swapIconY);
+        let rightSwapAbsY = workArea.y + swapIconY;
         this._navButtons.right._swapButton.set_position(rightSwapAbsX, rightSwapAbsY);
         this._navButtons.right._swapButton.set_size(iconSize, iconSize);
         if (this._navButtons.right._swapButton._icon) {
@@ -613,13 +631,6 @@ export default class HorizontalTilerExtension extends Extension {
             this._navButtons.right._swapButton._icon.set_size(iconSize, iconSize);
         }
         this._navButtons.right._swapButton.show();
-
-        // Position rotated title label as sibling at the bottom of the margin area
-        text = titles.right || '';
-        labelX = workArea.x + marginWidth + windowWidth + Math.floor((marginWidth - visualWidth) / 2);
-        labelY = workArea.y + windowHeight - 58; // 50px up from bottom for all titles
-        this._navButtons.right._titleLabel.set_position(labelX, Math.max(workArea.y, labelY));
-        this._navButtons.right._titleLabel.show();
     }
 
     _destroyNavButtons() {
