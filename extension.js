@@ -381,9 +381,13 @@ export default class HorizontalTilerExtension extends Extension {
             focusedIndex = windows.indexOf(focusedWindow.get_transient_for());
         }
 
-        // If focused window is not in our list, fall back to index 0
-        if (focusedIndex === -1)
+        // If focused window is not in our list, auto-focus the first window
+        if (focusedIndex === -1) {
             focusedIndex = 0;
+            let firstWindow = windows[0];
+            firstWindow.unminimize();
+            firstWindow.activate(global.get_current_time());
+        }
 
         // Arrange windows so the focused window is in the center slot
         // For 3 windows: [left = (focusedIndex - 1), center = focusedIndex, right = (focusedIndex + 1)]
@@ -588,9 +592,9 @@ export default class HorizontalTilerExtension extends Extension {
         let visualWidth = 18; // approximate visual width after -90 rotation
         let labelX = workArea.x + Math.floor((marginWidth - visualWidth) / 2); // horizontally centered
         let labelY = workArea.y + Math.floor(windowHeight * 0.75); // 25% from bottom
-        this._navButtons.left._titleLabel.set_width(Math.floor(windowHeight * 0.5));
         this._navButtons.left._titleLabel.set_position(labelX, Math.max(workArea.y, labelY));
         this._navButtons.left._titleLabel.show();
+        this._navButtons.left._titleLabel.set_width(Math.floor(windowHeight * 0.5));
 
         // Position swap button at the bottom of the margin (absolute screen coordinates)
         let swapIconY = windowHeight - iconSize - 8;
@@ -617,9 +621,9 @@ export default class HorizontalTilerExtension extends Extension {
         text = titles.right || '';
         labelX = workArea.x + marginWidth + windowWidth + Math.floor((marginWidth - visualWidth) / 2);
         labelY = workArea.y + Math.floor(windowHeight * 0.75); // 25% from bottom
-        this._navButtons.right._titleLabel.set_width(Math.floor(windowHeight * 0.5));
         this._navButtons.right._titleLabel.set_position(labelX, Math.max(workArea.y, labelY));
         this._navButtons.right._titleLabel.show();
+        this._navButtons.right._titleLabel.set_width(Math.floor(windowHeight * 0.5));
 
         // Position swap button at the bottom of the margin (absolute screen coordinates)
         let rightSwapAbsX = workArea.x + marginWidth + windowWidth + iconX;
