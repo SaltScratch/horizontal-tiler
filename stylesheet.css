@@ -1,0 +1,48 @@
+/* Horizontal Tiler - GNOME Shell Extension */
+
+/* Navigation arrow buttons in the margins */
+.horizontal-tiler-nav-button {
+    background-color: rgba(0, 0, 0, 0.15);
+    border-radius: 0px;
+    border: none;
+    padding: 0px;
+}
+
+.horizontal-tiler-nav-button:hover {
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+.horizontal-tiler-nav-icon {
+    color: rgba(255, 255, 255, 0.6);
+    width: 32px;
+    height: 32px;
+}
+
+.horizontal-tiler-nav-button:hover .horizontal-tiler-nav-icon {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Window title labels in the navigation margins */
+.horizontal-tiler-nav-title {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+    padding: 4px 6px;
+    max-width: 100%;
+    ellipsize: end;
+}
+
+/* Swap icon (⇄) in the navigation margins */
+.horizontal-tiler-nav-swap {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    min-width: 32px;
+    min-height: 32px;
+}
+
+.horizontal-tiler-nav-button:hover .horizontal-tiler-nav-swap {
+    color: rgba(255, 255, 255, 0.9);
+}

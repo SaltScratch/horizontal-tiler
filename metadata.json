@@ -1,0 +1,8 @@
+{
+  "name": "Horizontal Tiler",
+  "description": "Tile windows horizontally across the screen with keyboard shortcuts",
+  "uuid": "horizontal-tiler@allan",
+  "shell-version": ["46"],
+  "version": 1,
+  "url": "https://github.com/allan/horizontal-tiler"
+}
