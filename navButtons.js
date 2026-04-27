@@ -7,11 +7,27 @@ import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 export class NavButtons {
+    /**
+     * Constructs the NavButtons manager.
+     * Stores a reference to the parent extension and initialises an empty
+     * map of navigation button groups keyed by monitor ID.
+     *
+     * @param {object} extension - The parent HorizontalTilerExtension instance.
+     */
     constructor(extension) {
         this._extension = extension;
         this._navButtonsByMonitor = {}; // nav buttons keyed by monitor ID
     }
 
+    /**
+     * Retrieves the titles of the windows adjacent to the given (or currently
+     * displayed) window in the global window order.
+     *
+     * @param {Meta.Window|null} [forWindow=null] - The reference window; if null,
+     *     the window displayed on the leftmost monitor is used.
+     * @returns {{left: string|null, right: string|null}} An object with the titles
+     *     of the left and right neighbour windows, or null if unavailable.
+     */
     _getNeighborWindowTitles(forWindow = null) {
         let windows = this._extension._getAllWindows(true);
         if (windows.length <= 1)
@@ -38,10 +54,17 @@ export class NavButtons {
         };
     }
 
+    /**
+     * Destroys all navigation buttons. Alias for destroyAll().
+     */
     destroy() {
         this.destroyAll();
     }
 
+    /**
+     * Destroys all navigation buttons across every monitor and clears the
+     * _navButtonsByMonitor map.
+     */
     destroyAll() {
         for (let monitorId in this._navButtonsByMonitor) {
             this._destroyForMonitor(parseInt(monitorId));
@@ -49,6 +72,12 @@ export class NavButtons {
         this._navButtonsByMonitor = {};
     }
 
+    /**
+     * Destroys the navigation button group for a specific monitor, including
+     * the left/right buttons, their swap buttons, and title labels.
+     *
+     * @param {number} monitorId - The monitor whose nav buttons to destroy.
+     */
     _destroyForMonitor(monitorId) {
         let nav = this._navButtonsByMonitor[monitorId];
         if (!nav) return;
@@ -79,6 +108,11 @@ export class NavButtons {
         delete this._navButtonsByMonitor[monitorId];
     }
 
+    /**
+     * Positions navigation buttons on all monitors that currently have
+     * unminimised windows. Creates new button groups as needed and destroys
+     * groups for monitors that no longer have windows.
+     */
     positionAll() {
         let allWindows = this._extension._getAllWindows(true);
         if (allWindows.length <= 1) {
@@ -110,6 +144,14 @@ export class NavButtons {
         }
     }
 
+    /**
+     * Creates the navigation button group for a given monitor, consisting of:
+     * - A left arrow button (pan-start) with a swap button and a rotated title label
+     * - A right arrow button (pan-end) with a swap button and a rotated title label
+     * All elements are added to the top chrome layer.
+     *
+     * @param {number} monitorId - The monitor to create buttons for.
+     */
     _createForMonitor(monitorId) {
         // Destroy existing buttons for this monitor if any
         this._destroyForMonitor(monitorId);
@@ -207,6 +249,15 @@ export class NavButtons {
         this._navButtonsByMonitor[monitorId] = nav;
     }
 
+    /**
+     * Positions and shows/hides the navigation button group for a given monitor.
+     * On the leftmost monitor only left controls (arrow, swap, title) are shown;
+     * on the rightmost monitor only right controls are shown;
+     * on middle monitors all controls are hidden.
+     * Title labels display the neighbour window names, rotated 90 degrees.
+     *
+     * @param {number} monitorId - The monitor to position buttons for.
+     */
     _positionForMonitor(monitorId) {
         let nav = this._navButtonsByMonitor[monitorId];
         if (!nav || !nav.left || !nav.right) return;

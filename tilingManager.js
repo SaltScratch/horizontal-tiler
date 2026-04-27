@@ -1,16 +1,19 @@
 // Horizontal Tiler - Tiling Manager
 // Handles enable/disable lifecycle, keybindings, and signal connections
 
-import Gio from 'gi://Gio';
 import Meta from 'gi://Meta';
 import Shell from 'gi://Shell';
-import St from 'gi://St';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
-import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
-import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
 export class TilingManager {
+    /**
+     * Constructs the TilingManager.
+     * Stores a reference to the parent extension and initialises signal handler IDs
+     * and state flags to their default (disabled) values.
+     *
+     * @param {object} extension - The parent HorizontalTilerExtension instance.
+     */
     constructor(extension) {
         this._extension = extension;
         this._keybindingIds = [];
@@ -25,49 +28,20 @@ export class TilingManager {
         this._schedulePending = false;
     }
 
+    /**
+     * Gets whether tiling is currently enabled.
+     *
+     * @returns {boolean} True if tiling is active, false otherwise.
+     */
     get tileEnabled() {
         return this._tileEnabled;
     }
 
-    enable() {
-        let ext = this._extension;
-        ext._settings = ext.getSettings('org.gnome.shell.extensions.horizontal-tiler');
-
-        ext._indicator = new PanelMenu.Button(0.0);
-
-        let icon = new St.Icon({
-            icon_name: 'view-grid-symbolic',
-            style_class: 'system-status-icon',
-        });
-        ext._indicator.add_child(icon);
-
-        // Tile All (toggle)
-        this._tileToggleItem = new PopupMenu.PopupMenuItem('Tile All Windows');
-        this._tileToggleItem.connect('activate', () => {
-            this._toggleTiling();
-        });
-        ext._indicator.menu.addMenuItem(this._tileToggleItem);
-
-        Main.panel.addToStatusArea(ext.metadata.uuid, ext._indicator, 1, 'right');
-
-        this._setupKeybindings();
-
-        // Enable tiling by default
-        this._enableTiling();
-    }
-
-    disable() {
-        this._disableTiling();
-        if (this._extension._indicator) {
-            this._extension._indicator.destroy();
-            this._extension._indicator = null;
-        }
-        this._clearKeybindings();
-        if (this._extension._settings) {
-            this._extension._settings = null;
-        }
-    }
-
+    /**
+     * Registers all keyboard shortcuts (toggle-tiling, move-left, move-right,
+     * swap-left, swap-right) with GNOME Shell's window manager keybinding system.
+     * Each binding is stored in _keybindingIds for later cleanup.
+     */
     _setupKeybindings() {
         let ext = this._extension;
         let actionMode = Shell.ActionMode.NORMAL | Shell.ActionMode.OVERVIEW;
@@ -118,6 +92,10 @@ export class TilingManager {
         this._keybindingIds.push('swap-right');
     }
 
+    /**
+     * Removes all registered keybindings from GNOME Shell's window manager
+     * and clears the _keybindingIds array.
+     */
     _clearKeybindings() {
         if (!this._keybindingIds) return;
         for (let id of this._keybindingIds) {
@@ -126,6 +104,10 @@ export class TilingManager {
         this._keybindingIds = [];
     }
 
+    /**
+     * Toggles the tiling state between enabled and disabled.
+     * Delegates to either _enableTiling() or _disableTiling().
+     */
     _toggleTiling() {
         if (this._tileEnabled) {
             this._disableTiling();
@@ -134,6 +116,12 @@ export class TilingManager {
         }
     }
 
+    /**
+     * Activates tiling: updates the indicator style and menu label,
+     * connects all GNOME Shell signals (window-entered-monitor,
+     * window-left-monitor, minimize, unminimize, workareas-changed),
+     * and triggers an initial tile layout.
+     */
     _enableTiling() {
         if (this._tileEnabled) return;
         this._tileEnabled = true;
@@ -150,8 +138,9 @@ export class TilingManager {
         this._windowEnteredMonitorId = global.display.connect('window-entered-monitor', (display, win, monitor) => {
             if (!ext._suppressSchedule && win && win.get_window_type() === Meta.WindowType.NORMAL &&
                 win.get_transient_for() === null) {
-                win.unminimize();
-                win.activate(global.get_current_time());
+                // Handle panel/taskbar window clicks: swap the activated window
+                // into the display order
+                ext._onWindowActivated(win);
             }
             this._scheduleTileAll();
         });
@@ -174,9 +163,14 @@ export class TilingManager {
             }
         });
 
-        ext._tileAllWindows();
+        ext._refreshLayout();
     }
 
+    /**
+     * Deactivates tiling: updates the indicator style and menu label,
+     * unminimises all windows, destroys navigation buttons, and disconnects
+     * all GNOME Shell signals.
+     */
     _disableTiling() {
         if (!this._tileEnabled) return;
         this._tileEnabled = false;
@@ -216,14 +210,20 @@ export class TilingManager {
             global.display.disconnect(this._sizeChangedId);
             this._sizeChangedId = 0;
         }
+
+
     }
 
+    /**
+     * Unminimises all NORMAL-type, non-transient windows on the current monitor.
+     * Uses a re-entrancy guard (_unminimizingAll) to prevent recursive calls.
+     */
     _unminimizeAllWindows() {
         if (this._unminimizingAll) return;
         this._unminimizingAll = true;
 
         try {
-            let windows = this._extension._getWindowsOnCurrentMonitor(true);
+            let windows = this._extension._getAllWindows(true);
             for (let win of windows) {
                 win.unminimize();
             }
@@ -232,6 +232,12 @@ export class TilingManager {
         }
     }
 
+    /**
+     * Schedules a tile-all operation to run before the next compositor redraw.
+     * Uses a pending flag to debounce multiple rapid requests.
+     * The operation is skipped if tiling is disabled, windows are being hidden,
+     * or scheduling is suppressed.
+     */
     _scheduleTileAll() {
         if (this._schedulePending || this._extension._suppressSchedule) return;
         this._schedulePending = true;
@@ -239,7 +245,7 @@ export class TilingManager {
         laters.add(Meta.LaterType.BEFORE_REDRAW, () => {
             this._schedulePending = false;
             if (this._tileEnabled && !this._extension._hidingWindows && !this._extension._suppressSchedule) {
-                this._extension._tileAllWindows();
+                this._extension._refreshLayout();
             }
         });
     }
